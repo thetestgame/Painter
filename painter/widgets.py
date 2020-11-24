@@ -7,6 +7,58 @@ from painter import runtime, showbase
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 
+class QRegionColorPicker(QtWidgets.QWidget):
+    """
+    """
+
+    def __init__(self , *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._regionBtns = {}
+        self._initializeViewport()
+
+    def _initializeViewport(self) -> None:
+        """
+        """
+
+        grid = QtWidgets.QGridLayout()
+
+        infoBox = QtWidgets.QGroupBox('Item Information')
+        infoBoxLayout = QtWidgets.QVBoxLayout()
+
+        btnBox = QtWidgets.QGroupBox('Color Regions')
+        btnBoxLayout = QtWidgets.QVBoxLayout()
+        for index in range(6):
+            btn = self._createRegionButton(index, btnBoxLayout)
+            self._regionBtns[index] = btn
+
+        infoBox.setLayout(infoBoxLayout)
+        btnBox.setLayout(btnBoxLayout)
+
+        grid.addWidget(infoBox)
+        grid.addWidget(btnBox)
+        self.setLayout(grid)
+
+    def _createRegionButton(self, index: int, layout: object) -> QtWidgets.QPushButton:
+        """
+        """
+
+        index += 1
+        button = QtWidgets.QPushButton('Color Region #%s' % index)
+        button.setToolTip('Opens the color dialog to recolor region #%s' % index)
+        button.clicked.connect(self._handleRegionColorPress)
+
+        layout.addWidget(button)
+        return button
+
+    def _handleRegionColorPress(self) -> None:
+        """
+        """
+
+        color = QtWidgets.QColorDialog.getColor()
+
+#----------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+
 class QViewportWidget(QtWidgets.QWidget):
     """
     """
@@ -61,6 +113,6 @@ class QViewportWidget(QtWidgets.QWidget):
         """
         """
         
-        return QtCore.QSize(400,300)
+        return QtCore.QSize(600,300)
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------#
