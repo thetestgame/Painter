@@ -1,11 +1,5 @@
 """
-Contains all globally available variables used throughout a CBIW application
 """
-
-__author__ = "Jordan Maxwell"
-__copyright__ = "{{ copyright_notice }}"
-__license__ = "All Rights Reserved"
-__email__ = "jordan.maxwell@nxt-games.com"
 
 import builtins
 import sys as __sys
