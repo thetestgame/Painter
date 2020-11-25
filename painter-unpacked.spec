@@ -13,7 +13,7 @@ block_cipher = None
 
 # Compile application executable
 a = Analysis(
-    ['packed.py'],
+    ['unpacked.py'],
     pathex=['K:\\dev\\DarksideRP\\AtlasPreviewTool'],
     binaries=[],
     datas=[],
@@ -41,16 +41,13 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False)
+    console=True)
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 
-# Compile data directory
-os.chdir('assets')
-os.system('multify -c -f %s/assets.mf .' % DISTPATH)
-
-os.chdir('../items')
-os.system('multify -c -f %s/items.mf .' % DISTPATH)
+# Copy asset and item directories
+shutil.copytree('assets', '{0}/assets'.format(DISTPATH))
+shutil.copytree('items',  '{0}/items'.format(DISTPATH))
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 
