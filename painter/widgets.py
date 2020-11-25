@@ -4,10 +4,11 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from panda3d import core as p3d
 from painter import runtime, showbase, vfs
+from functools import partial
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 
-class QRegionColorPicker(QtWidgets.QWidget):
+class QItemDetails(QtWidgets.QWidget):
     """
     """
 
@@ -42,9 +43,12 @@ class QRegionColorPicker(QtWidgets.QWidget):
 
         btnBox = QtWidgets.QGroupBox('Color Regions')
         btnBoxLayout = QtWidgets.QVBoxLayout()
-        for index in range(6):
-            btn = self._createRegionButton(index, btnBoxLayout)
-            self._regionBtns[index] = btn
+        channels = runtime.editor_state.get_channel_list()
+        index = 0
+        for channel in channels:
+            btn = self._createRegionButton(index, channel, btnBoxLayout)
+            self._regionBtns[channel] = btn
+            index += 1
 
         infoBox.setLayout(infoBoxLayout)
         btnBox.setLayout(btnBoxLayout)
@@ -52,30 +56,48 @@ class QRegionColorPicker(QtWidgets.QWidget):
         grid.addWidget(infoBox)
         grid.addWidget(btnBox)
         self.setLayout(grid)
+        self._updateRegions()
 
-    def _createRegionButton(self, index: int, layout: object) -> QtWidgets.QPushButton:
+    def _createRegionButton(self, index: int, channel: str, layout: object) -> QtWidgets.QPushButton:
         """
         """
 
         index += 1
         button = QtWidgets.QPushButton('Color Region #%s' % index)
         button.setToolTip('Opens the color dialog to recolor region #%s' % index)
-        button.clicked.connect(self._handleRegionColorPress)
+        button.clicked.connect(partial(self._handleRegionColorPress, channel))
 
         layout.addWidget(button)
         return button
 
-    def _handleRegionColorPress(self) -> None:
+    def _handleRegionColorPress(self, channel: int) -> None:
         """
         """
 
-        color = QtWidgets.QColorDialog.getColor()
+        color = QtWidgets.QColorDialog.getColor(
+            initial=runtime.editor_state.get_channel(channel))
+        if color.isValid():
+            runtime.editor_state.set_channel(channel, color)
 
     def _handleItemTypeChange(self, index: int) -> None:
         """
         """
     
-        print(index)
+        item_type = runtime.library.items[index]
+        runtime.editor_state.item_type = item_type
+        self._updateRegions()
+
+    def _updateRegions(self) -> None:
+        """
+        """
+
+        item_type = runtime.editor_state.item_type
+        item_data = runtime.library.itemData[item_type]
+        
+        regions = item_data['Regions']
+        for key, val in regions.items():
+            channel = key.capitalize()
+            self._regionBtns[channel].setEnabled(int(val))
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -105,16 +127,12 @@ class QViewportWidget(QtWidgets.QWidget):
         self.base.openDefaultWindow(props=wp)
         self.base.set_background_color(0, 0, 0, 1)
 
-        # Configure our VFS and populate our library
-        vfs.switch_file_functions_to_vfs()
-        vfs.switch_io_functions_to_vfs()
-        runtime.library.pullConfiguration()
-
         # Setup our task manager step timer
         self._pandaTimer = QtCore.QTimer(self)
         self._pandaTimer.timeout.connect(base.task_mgr.step)
         self._pandaTimer.start(0)
 
+        # Create our display quad
         cardMaker = p3d.CardMaker("ItemCard")
         cardMaker.set_frame(-0.8, 0.8, -0.8, 0.8)
         self.itemCard = self.base.aspect2d.attach_new_node(cardMaker.generate())
@@ -131,16 +149,12 @@ class QViewportWidget(QtWidgets.QWidget):
         self.itemCard.set_shader_input('pnt_CyanChannel',       p3d.Vec3(0, 0, 0))
         self.itemCard.set_shader_input('pnt_MagentaChannel',    p3d.Vec3(0, 0, 0))
         self.itemCard.set_shader_input('pnt_YellowChannel',     p3d.Vec3(0, 0, 0))
-        self.itemCard.set_shader_input('pnt_BlackoutChannel',   p3d.Vec3(1, 0, 0))
+        self.itemCard.set_shader_input('pnt_BlackoutChannel',   p3d.Vec3(1, 1, 1))
 
-        # Test
-        detail = self.base.loader.load_texture('maps/DS_Box02_D.png')
-        mask = self.base.loader.load_texture('maps/DS_Box02_M.png')
-        mask_stage = p3d.TextureStage('mask')
-
-        self.itemCard.set_texture(detail)
-        self.itemCard.set_texture(mask_stage, mask)
-        self.itemCard.set_transparency(True)
+        # Configure our VFS and populate our library
+        vfs.switch_file_functions_to_vfs()
+        vfs.switch_io_functions_to_vfs()
+        runtime.library.pullConfiguration()
 
     def forceResize(self) -> None:
         """

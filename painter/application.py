@@ -4,7 +4,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from panda3d import core as p3d
 
-from painter import window, __version__
+from painter import editor, __version__
 from painter import vfs, runtime
 
 import os
@@ -46,18 +46,27 @@ class PainterApplication(QtWidgets.QApplication):
         # Mount our application virtual file system
         if dev:
             vfs.vfs_mount_subdirectories('.', 'assets')
+            vfs.vfs_mount_subdirectories('.', 'items')
         else:
-            success = vfs.vfs_mount_multifile('.', 'data.mf') and vfs.vfs_mount_multifile('.', 'item.mf')
-            if not success:
-                self.showErrorDialog(message='Failed to mount application data files.')
-                sys.exit(2)
+            self._mountMultifile('assets.mf')
+            self._mountMultifile('items.mf')
 
         # Initialize Panda3D environment variables
         p3d.load_prc_file('config/painter.prc')
 
-        # Initialize our window
-        self._window = window.QEditorWindow()
+        # Initialize our editor window
+        self._window = editor.QEditorWindow()
         self._window.show()
+
+    def _mountMultifile(self, path: str) -> None:
+        """
+        Mounts the requested multifile path
+        """
+
+        success = vfs.vfs_mount_multifile('.', path)
+        if not success:
+            self.showErrorDialog(message='Failed to mount %s' % path)
+            sys.exit(2)
 
     def showErrorDialog(self, message: str, title: str = 'Critical Error') -> None:
         """
