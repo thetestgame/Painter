@@ -2,7 +2,8 @@
 """
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from painter import widgets, runtime
+from painter import widgets, runtime, library
+from painter import __version__
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -14,9 +15,16 @@ class QEditor(QtWidgets.QWidget):
         super().__init__(*args, **kwargs)
         runtime.editor = self
 
-        self._initializeViewport()
+        self._initalizeManagers()
+        self._initializeGui()
 
-    def _initializeViewport(self) -> None:
+    def _initalizeManagers(self) -> None:
+        """
+        """
+
+        self._library = library.ItemLibrary('items')
+
+    def _initializeGui(self) -> None:
         """
         """
 
@@ -105,5 +113,13 @@ class QEditorWindow(QtWidgets.QMainWindow):
     def _openAbout(self) -> None:
         """
         """
+
+        QtWidgets.QMessageBox.about(self, 
+            'About',  
+            """
+            6 Channel Item Painting Utility.
+            Created By: Jordan Maxwell (thetestgame)
+            Version: %s
+            """ % __version__)
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------#

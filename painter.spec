@@ -45,7 +45,7 @@ exe = EXE(
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 
-# Copy asset files to directory
+# Compile data directory
 if not os.path.exists('{0}/config'.format(DISTPATH)):
     shutil.copytree('assets/config', '{0}/config'.format(DISTPATH))
 
