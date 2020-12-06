@@ -1,10 +1,14 @@
 """
 """
 
+from PyQt5 import QtGui
+
 from panda3d import core as p3d
 from painter import runtime, vfs
 
 import configparser
+import base64
+import os
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -38,6 +42,23 @@ class ItemLibrary(object):
         """
 
         return self._itemData
+
+    @property
+    def itemIcons(self) -> list:
+        """
+        """
+
+        items = {}
+        for key in self._items:
+            detail_icon = self._itemData[key]['Images']['detail']
+            with open(detail_icon, 'rb') as f:
+                pm = QtGui.QPixmap()
+                pm.loadFromData(f.read())
+
+                items[key] = QtGui.QIcon()
+                items[key].addPixmap(pm)
+
+        return items
 
     def pullConfiguration(self) -> None:
         """

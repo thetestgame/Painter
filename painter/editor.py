@@ -7,6 +7,9 @@ from panda3d import core as p3d
 from painter import widgets, runtime, item
 from painter import __version__
 
+import os
+import configparser
+
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 
 class EditorState(object):
@@ -35,18 +38,35 @@ class EditorState(object):
     ###        Info        ###
     ##########################
 
+    @property
     def name(self) -> str:
         """
         """
 
         return self._name
 
+    @name.setter
     def name(self, name: str) -> None:
         """
         """
 
         self._dirty = True
         self._name = name
+
+    @property
+    def tooltip(self) -> str:
+        """
+        """
+
+        return self._tooltip
+
+    @tooltip.setter
+    def tooltip(self, tooltip: str) -> None:
+        """
+        """
+
+        self._dirty = True
+        self._tooltip = tooltip
 
     ##########################
     ###        Type        ###
@@ -63,7 +83,7 @@ class EditorState(object):
     def item_type(self, item_type: str) -> None:
         """
         """
-
+    
         self._item_type = item_type
         item_data = runtime.library.itemData[item_type]
         images = item_data['Images']
@@ -103,18 +123,78 @@ class EditorState(object):
         shader_input_name = 'pnt_%sChannel' % key
         runtime.itemCard.set_shader_input(shader_input_name, shader_input)
 
+    def set_channel_hex(self, key: str, hex: str) -> None:
+        """
+        """
+
+        self.set_channel(key, QtGui.QColor(hex))
+
+    ##########################
+    ###  State Management  ###
+    ##########################
+
+    def is_dirty(self) -> bool:
+        """
+        """
+
+        return self._dirty
+
+    def clear(self) -> None:
+        """
+        """
+
+        self._name = 'Example Item'
+        self._tooltip = 'Example Tooltip'
+        self._dirty = True
+
+        self.set_channel('Red',  QtGui.QColor(0, 0, 0))
+        self.set_channel('Green',  QtGui.QColor(0, 0, 0))
+        self.set_channel('Blue',  QtGui.QColor(0, 0, 0))
+        self.set_channel('Cyan',  QtGui.QColor(0, 0, 0))
+        self.set_channel('Magenta',  QtGui.QColor(0, 0, 0))
+        self.set_channel('Yellow',  QtGui.QColor(0, 0, 0))
+        self.set_channel('Blackout',  QtGui.QColor(255, 255, 255))
+
+        runtime.messenger.send('STATE_CHANGED')
+
     ##########################
     ### File Serialization ###
     ##########################
 
-    def to_file(self, filename: str) -> None:
+    def toFile(self, filename: str) -> None:
         """
         """
 
-    @classmethod
-    def from_file(cls, filename: str) -> object:
+        self._dirty = False
+
+        config = configparser.ConfigParser()
+        config['Information'] = {}
+        config['Information']['Name'] = self._name
+        config['Information']['Tooltip'] = self._tooltip
+        config['Information']['Type'] = self._item_type
+        config['Colors'] = {}
+        for channel in self._channels:
+            config['Colors'][channel] = self._channels[channel].name()
+
+        with native_open(filename, 'w') as f:
+            config.write(f)
+
+    def fromFile(self, filename: str) -> object:
         """
         """
+
+        config = configparser.SafeConfigParser()
+        config.read(filename)
+
+        self.name = config['Information']['Name']
+        self.tooltip = config['Information']['Tooltip']
+        self.item_type = config['Information']['Type']
+
+        for channel in config['Colors']:
+            self.set_channel_hex(channel.capitalize(), config['Colors'][channel])
+
+        self._dirty = False
+        runtime.messenger.send('STATE_CHANGED')
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -134,7 +214,7 @@ class QEditor(QtWidgets.QWidget):
         """
 
         self._library = item.ItemLibrary('config')
-        self._state = EditorState()
+        self.editor_state = EditorState()
 
     def _initializeGui(self) -> None:
         """
@@ -173,6 +253,7 @@ class QEditorWindow(QtWidgets.QMainWindow):
         runtime.window = self
 
         self._initializeViewport()
+        self._activeFile = None
 
     def _initializeViewport(self) -> None:
         """
@@ -210,17 +291,43 @@ class QEditorWindow(QtWidgets.QMainWindow):
         """
         """
 
+        self._activeFile = None
+        runtime.editor_state.clear()
+
     def _openFile(self) -> None:
         """
         """
+
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open  Item File', '', 'Item Ini (*.ini)')
+        runtime.editor_state.fromFile(filename)
 
     def _saveFile(self) -> None:
         """
         """
 
+        self._saveEditorState(True)
+
     def _saveFileAs(self) -> None:
         """
         """
+
+        self._saveEditorState()
+
+    def _saveEditorState(self, existing: bool = False) -> None:
+        """
+        """
+
+        filename = None
+        if existing and self._activeFile != None:
+            filename = self._activeFile
+        else:
+            filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save Item File', '', 'Item Ini (*.ini)')
+
+        if filename == None:
+            return
+
+        self._activeFile = filename
+        runtime.editor_state.toFile(filename)
 
     def _openAbout(self) -> None:
         """

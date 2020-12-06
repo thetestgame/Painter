@@ -310,6 +310,7 @@ def switch_io_functions_to_vfs() -> None:
     """
 
     from direct.stdpy import file
+    __builtins__['native_open'] = __builtins__['open']
     __builtins__['open'] = file.open
     __builtins__['file'] = file.open
 
