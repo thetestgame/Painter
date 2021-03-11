@@ -220,22 +220,15 @@ class QEditor(QtWidgets.QWidget):
         """
         """
 
-        verticalLayout = QtWidgets.QVBoxLayout()
-        verticalLayout.setSpacing(2)
-
-        horizontalLayout1 = QtWidgets.QHBoxLayout()
-        horizontalLayout2 = QtWidgets.QHBoxLayout()
+        horizontalLayout = QtWidgets.QHBoxLayout()
 
         self.viewport = widgets.QViewportWidget()
         self.colorpicker = widgets.QItemDetails()
 
-        horizontalLayout1.addWidget(self.viewport)
-        horizontalLayout1.addWidget(self.colorpicker)
+        horizontalLayout.addWidget(self.viewport)
+        horizontalLayout.addWidget(self.colorpicker)
 
-        verticalLayout.addLayout(horizontalLayout1)
-        verticalLayout.addLayout(horizontalLayout2)
-
-        self.setLayout(verticalLayout)
+        self.setLayout(horizontalLayout)
 
     def show(self) -> None:
         """
