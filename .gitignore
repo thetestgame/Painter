@@ -135,3 +135,9 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# Ignored directory
+ignore/
+
+#  Ignore prebuilt item directory
+items/

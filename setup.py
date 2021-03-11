@@ -7,7 +7,6 @@ from painter import __version__ as version
 
 #----------------------------------------------------------------------------------------------------------------------------------#
 
-
 def main() -> int:
     """
     Main entry point for the setuptools script

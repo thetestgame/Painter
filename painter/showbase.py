@@ -13,9 +13,6 @@ class PainterShowBase(ShowBase):
 
     def __init__(self, fStartDirect=True, windowType=None):
 
-        # Load our PRC files
-        p3d.load_prc_file('config/painter.prc')
-
         super().__init__(fStartDirect=fStartDirect, windowType=windowType)
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------#
